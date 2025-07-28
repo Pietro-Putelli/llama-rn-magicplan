@@ -1,6 +1,6 @@
 import * as FileSystem from "expo-file-system";
 import { initLlama } from "llama.rn";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button, ScrollView, Text, View } from "react-native";
 import "react-native-reanimated";
 
@@ -68,26 +68,7 @@ export default function RootLayout() {
     const fileDownloaded = await downloadResumable.downloadAsync();
   };
 
-  const context = useRef<any>(null);
-
-  useEffect(() => {
-    (async () => {
-      context.current = await initLlama({
-        model: FileSystem.documentDirectory + "Phi-4-mini-instruct-Q8_0.gguf",
-        n_threads: 4,
-        use_mlock: true,
-        n_gpu_layers: 50,
-        n_ctx: 1024,
-        // use_mmap: true,
-        // n_batch: 512,
-        // n_ubatch: 512,
-        // cache_type_k: "q8_0",
-        // cache_type_v: "q8_0",
-      });
-
-      console.log("Llama context initialized:", context.current);
-    })();
-  }, []);
+  const [context, setContext] = useState(useRef(null));
 
   const generate = async (userInput: string, model: any) => {
     const start = Date.now();
@@ -109,7 +90,7 @@ export default function RootLayout() {
       "</s>",
     ];
 
-    const msgResult = await context.current.completion({
+    const msgResult = await context.completion({
       messages: [
         {
           role: "system",
@@ -258,6 +239,27 @@ export default function RootLayout() {
         title="Load Model"
         onPress={() => {
           loadModel(Models[1]);
+        }}
+      />
+
+      <Button
+        title="Load context"
+        onPress={async () => {
+          const context = await initLlama({
+            model:
+              FileSystem.documentDirectory + "Phi-4-mini-instruct-Q8_0.gguf",
+            n_threads: 4,
+            use_mlock: true,
+            n_gpu_layers: 50,
+            n_ctx: 1024,
+            // use_mmap: true,
+            // n_batch: 512,
+            // n_ubatch: 512,
+            // cache_type_k: "q8_0",
+            // cache_type_v: "q8_0",
+          });
+          console.log("Context initialized:", context);
+          setContext(context);
         }}
       />
 
